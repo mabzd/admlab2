@@ -3,6 +3,15 @@ import pickle
 import sys
 
 test_data = True
+lucky_number = 42
+
+def cache_dump(obj, name):
+	with open('cache/' + name, 'wb') as file:
+		pickle.dump(obj, file)
+
+def cache_load(name):
+	with open('cache/' + name, 'rb') as file:
+		return pickle.load(file)
 
 def read_data(file):
 	return pd.read_csv(
@@ -52,13 +61,8 @@ def preprocess_data():
 	df = df.fillna(0)
 	return df
 
-def cache_dump(obj, name):
-	with open('cache/' + name, 'wb') as file:
-		pickle.dump(obj, file)
-
-def cache_load(name):
-	with open('cache/' + name, 'rb') as file:
-		return pickle.load(file)
+def classify(df):
+	print 'classify: not implemented'
 
 if len(sys.argv) < 2:
 	sys.stderr.write('Usage: main.py [test|data] preprocess classify print')
@@ -73,7 +77,9 @@ for param in sys.argv[1:]:
 	elif param == 'test':
 		test_data = True
 	elif param == 'classify':
-		print 'classify: not implemented'
+		if 'df' not in locals():
+			df = cache_load('df')
+		classify(df)
 	elif param == 'print':
 		if 'df' not in locals():
 			df = cache_load('df')
