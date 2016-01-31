@@ -43,7 +43,7 @@ def cache_load(name):
 		return pickle.load(file)
 
 if len(sys.argv) < 2:
-	sys.stderr.write('Usage: main.py preprocess|classify')
+	sys.stderr.write('Usage: main.py [test|data] preprocess classify print')
 	sys.exit(1)
 
 for param in sys.argv[1:]:
