@@ -42,18 +42,24 @@ def cache_load(name):
 	with open('cache/' + name, 'rb') as file:
 		return pickle.load(file)
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2:
 	sys.stderr.write('Usage: main.py preprocess|classify')
 	sys.exit(1)
 
-if sys.argv[1] == 'preprocess':
-	df = preprocess_data()
-	cache_dump(df, 'df')
-elif sys.argv[1] == 'classify':
-	sys.stdout.write('Not implemented')
-elif sys.argv[1] == 'print':
-	df = cache_load('df')
-	print df
-else:
-	sys.stderr.write('Unrecognized option: ' + sys.argv[1])
-	sys.exit(1)
+for param in sys.argv[1:]:
+	if param == 'preprocess':
+		df = preprocess_data()
+		cache_dump(df, 'df')
+	elif param == 'data':
+		test_data = False
+	elif param == 'test':
+		test_data = True
+	elif param == 'classify':
+		print 'classify: not implemented'
+	elif param == 'print':
+		if 'df' not in locals():
+			df = cache_load('df')
+		print df
+	else:
+		sys.stderr.write('Unrecognized option: ' + sys.argv[1])
+		sys.exit(1)
