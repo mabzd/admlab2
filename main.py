@@ -1,24 +1,23 @@
 import pandas as pd
-import pickle
 import sys
+from sklearn.externals import joblib
 from sklearn.grid_search import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cross_validation import train_test_split
+from sklearn.metrics import recall_score
 
 test_data = True
 lucky_number = 42
 score_measure = 'recall_weighted'
 tune_parameters = {
-	'n_estimators': [50, 100, 150],
+	'n_estimators': [130, 140, 150, 160, 170, 180],
 	'max_features': ['sqrt', 'log2'] }
 
 def cache_dump(obj, name):
-	with open('cache/' + name, 'wb') as file:
-		pickle.dump(obj, file)
+	joblib.dump(obj, 'cache/' + name)
 
 def cache_load(name):
-	with open('cache/' + name, 'rb') as file:
-		return pickle.load(file)
+	return joblib.load('cache/' + name)
 
 def read_data(file):
 	return pd.read_csv(
@@ -83,18 +82,21 @@ def create_train_test(df, classes):
 		random_state = lucky_number,
 		stratify = classes)
 
-def tune(df):
+def search(df):
 	classes = df['res_name'].as_matrix()
 	df = df.drop('res_name', axis = 1)
 	X_train, X_test, y_train, y_test = create_train_test(df, classes)
-	estimator = create_random_forest_classifier()
+	rfc = create_random_forest_classifier()
 	clf = GridSearchCV(
-		estimator = estimator,
+		estimator = rfc,
 		param_grid = tune_parameters,
 		scoring = score_measure)
 	clf.fit(X_train, y_train)
-	print clf.best_params_
-	return clf.best_estimator_
+	best_rfc = clf.best_estimator_
+	print 'Best params: ', clf.best_params_
+	y_true, y_pred = y_test, best_rfc.predict(X_test)
+	print 'Score (' + score_measure + '): ', recall_score(y_true, y_pred, average='weighted')
+	return best_rfc
 
 def classify(df):
 	classes = df['res_name'].as_matrix()
@@ -102,7 +104,7 @@ def classify(df):
 	print df
 
 if len(sys.argv) < 2:
-	sys.stderr.write('Usage: main.py [test|data] preprocess tune classify print')
+	sys.stderr.write('Usage: main.py [test|data] preprocess search classify print')
 	sys.exit(1)
 
 for param in sys.argv[1:]:
@@ -116,10 +118,10 @@ for param in sys.argv[1:]:
 	elif param == 'test':
 		test_data = True
 		print 'Using test data'
-	elif param == 'tune':
+	elif param == 'search':
 		if 'df' not in locals():
 			df = cache_load('df')
-		es = tune(df)
+		es = search(df)
 		cache_dump(es, 'es')
 	elif param == 'classify':
 		if 'df' not in locals():
