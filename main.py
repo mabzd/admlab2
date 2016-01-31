@@ -38,7 +38,8 @@ def remove_ignored_columns(df):
 		'local_res_atom_S_count', 'dict_atom_non_h_count', 'dict_atom_non_h_electron_sum',
 		'dict_atom_C_count', 'dict_atom_N_count', 'dict_atom_O_count', 'dict_atom_S_count',
 		'fo_col', 'fc_col', 'weight_col', 'grid_space',
-		'solvent_radius', 'solvent_opening_radius']
+		'solvent_radius', 'solvent_opening_radius', 'part_step_FoFc_std_min',
+		'part_step_FoFc_std_max','part_step_FoFc_std_step']
 	return df.drop(ignored_columns, axis = 1)
 
 def preprocess_data():
