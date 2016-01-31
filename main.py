@@ -19,6 +19,10 @@ def cache_dump(obj, name):
 def cache_load(name):
 	return joblib.load('cache/' + name)
 
+def save_array(file, arr):
+	with open(file, 'wb') as f:
+		f.writelines(["%s\n" % a for a in arr])
+
 def read_data(file, sep):
 	return pd.read_csv(
 		file,
@@ -82,8 +86,7 @@ def create_train_test(df, classes):
 		random_state = lucky_number,
 		stratify = classes)
 
-def search(df):
-	classes = df['res_name'].as_matrix()
+def search(df, classes):
 	df = df.drop('res_name', axis = 1)
 	X_train, X_test, y_train, y_test = create_train_test(df, classes)
 	rfc = create_random_forest_classifier()
@@ -103,12 +106,10 @@ def classify(df, es):
 	tdf = read_data(file, ',')
 	tdf = tdf[list(set(tdf.columns).intersection(df.columns))]
 	tdf = tdf.fillna(0)
-	pred = es.predict(tdf)
-	with open('result.txt', 'wb') as f:
-		f.writelines(["%s\n" % p for p in pred])
+	return es.predict(tdf)
 
 if len(sys.argv) < 2:
-	sys.stderr.write('Usage: main.py [test|data] preprocess search classify print')
+	sys.stderr.write('Usage: main.py [test|data] preprocess search[g] classify[g] print')
 	sys.exit(1)
 
 for param in sys.argv[1:]:
@@ -125,14 +126,30 @@ for param in sys.argv[1:]:
 	elif param == 'search':
 		if 'df' not in locals():
 			df = cache_load('df')
-		es = search(df)
+		classes = df['res_name'].as_matrix()
+		es = search(df, classes)
 		cache_dump(es, 'es')
+	elif param == 'searchg':
+		if 'df' not in locals():
+			df = cache_load('df')
+		dfg = read_data('grouped_res_name.txt', ',')
+		classes = dfg['res_name_group'].as_matrix()
+		esg = search(df, classes)
+		cache_dump(esg, 'esg')
 	elif param == 'classify':
 		if 'df' not in locals():
 			df = cache_load('df')
 		if 'es' not in locals():
 			es = cache_load('es')
-		classify(df, es)
+		res = classify(df, es)
+		save_array('classify.txt', res)
+	elif param == 'classifyg':
+		if 'df' not in locals():
+			df = cache_load('df')
+		if 'esg' not in locals():
+			esg = cache_load('esg')
+		res = classify(df, esg)
+		save_array('classifyg.txt', res)
 	elif param == 'print':
 		if 'df' not in locals():
 			df = cache_load('df')
