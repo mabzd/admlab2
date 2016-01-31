@@ -47,8 +47,10 @@ def preprocess_data():
 	df = read_data(file)
 	df = remove_ignored_classes(df)
 	df = remove_duplicates(df)
+	df = remove_rare_classes(df)
 	df = remove_ignored_columns(df)
-	return remove_rare_classes(df)
+	df = df.fillna(0)
+	return df
 
 def cache_dump(obj, name):
 	with open('cache/' + name, 'wb') as file:
