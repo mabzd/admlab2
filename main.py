@@ -1,9 +1,16 @@
 import pandas as pd
 import pickle
 import sys
+from sklearn.grid_search import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cross_validation import train_test_split
 
 test_data = True
 lucky_number = 42
+score_measure = 'recall_weighted'
+tune_parameters = {
+	'n_estimators': [50, 100, 150],
+	'max_features': ['sqrt', 'log2'] }
 
 def cache_dump(obj, name):
 	with open('cache/' + name, 'wb') as file:
@@ -61,21 +68,59 @@ def preprocess_data():
 	df = df.fillna(0)
 	return df
 
+def create_random_forest_classifier():
+	return RandomForestClassifier(
+		n_jobs = -1,
+		n_estimators = 50,
+		oob_score = True,
+		random_state = lucky_number)
+
+def create_train_test(df, classes):
+	return train_test_split(
+		df,
+		classes,
+		test_size = 0.2,
+		random_state = lucky_number,
+		stratify = classes)
+
+def tune(df):
+	classes = df['res_name'].as_matrix()
+	df = df.drop('res_name', axis = 1)
+	X_train, X_test, y_train, y_test = create_train_test(df, classes)
+	estimator = create_random_forest_classifier()
+	clf = GridSearchCV(
+		estimator = estimator,
+		param_grid = tune_parameters,
+		scoring = score_measure)
+	clf.fit(X_train, y_train)
+	print clf.best_params_
+	return clf.best_estimator_
+
 def classify(df):
-	print 'classify: not implemented'
+	classes = df['res_name'].as_matrix()
+	df = df.drop('res_name', axis = 1)
+	print df
 
 if len(sys.argv) < 2:
-	sys.stderr.write('Usage: main.py [test|data] preprocess classify print')
+	sys.stderr.write('Usage: main.py [test|data] preprocess tune classify print')
 	sys.exit(1)
 
 for param in sys.argv[1:]:
+	print 'Executing: ' + param + '...'
 	if param == 'preprocess':
 		df = preprocess_data()
 		cache_dump(df, 'df')
 	elif param == 'data':
 		test_data = False
+		print 'Using real data'
 	elif param == 'test':
 		test_data = True
+		print 'Using test data'
+	elif param == 'tune':
+		if 'df' not in locals():
+			df = cache_load('df')
+		es = tune(df)
+		cache_dump(es, 'es')
 	elif param == 'classify':
 		if 'df' not in locals():
 			df = cache_load('df')
