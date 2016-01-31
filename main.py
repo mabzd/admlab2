@@ -27,11 +27,26 @@ def remove_rare_classes(df):
 	rare_classes = set(class_sizes[class_sizes < 5].index)
 	return df[~df.res_name.isin(rare_classes)]
 
+def remove_ignored_columns(df):
+	ignored_columns = ['title', 'pdb_code', 'res_id', 'chain_id',
+		'local_BAa', 'local_NPa', 'local_Ra', 'local_RGa',
+		'local_SRGa', 'local_CCSa', 'local_CCPa', 'local_ZOa',
+		'local_ZDa', 'local_ZD_minus_a', 'local_ZD_plus_a', 'local_res_atom_count',
+		'local_res_atom_non_h_count', 'local_res_atom_non_h_occupancy_sum',
+		'local_res_atom_non_h_electron_sum', 'local_res_atom_non_h_electron_occupancy_sum',
+		'local_res_atom_C_count', 'local_res_atom_N_count', 'local_res_atom_O_count',
+		'local_res_atom_S_count', 'dict_atom_non_h_count', 'dict_atom_non_h_electron_sum',
+		'dict_atom_C_count', 'dict_atom_N_count', 'dict_atom_O_count', 'dict_atom_S_count',
+		'fo_col', 'fc_col', 'weight_col', 'grid_space',
+		'solvent_radius', 'solvent_opening_radius']
+	return df.drop(ignored_columns, axis = 1)
+
 def preprocess_data():
 	file = 'test_summary.txt' if test_data else 'all_summary.txt'
 	df = read_data(file)
 	df = remove_ignored_classes(df)
 	df = remove_duplicates(df)
+	df = remove_ignored_columns(df)
 	return remove_rare_classes(df)
 
 def cache_dump(obj, name):
