@@ -19,11 +19,11 @@ def cache_dump(obj, name):
 def cache_load(name):
 	return joblib.load('cache/' + name)
 
-def read_data(file):
+def read_data(file, sep):
 	return pd.read_csv(
 		file,
-		sep=";",
-		na_values=["nan"],
+		sep = sep,
+		na_values = ["nan"],
 		keep_default_na = False)
 
 def remove_ignored_classes(df):
@@ -54,12 +54,12 @@ def remove_ignored_columns(df):
 		'dict_atom_C_count', 'dict_atom_N_count', 'dict_atom_O_count', 'dict_atom_S_count',
 		'fo_col', 'fc_col', 'weight_col', 'grid_space',
 		'solvent_radius', 'solvent_opening_radius', 'part_step_FoFc_std_min',
-		'part_step_FoFc_std_max','part_step_FoFc_std_step']
+		'part_step_FoFc_std_max','part_step_FoFc_std_step', 'resolution_max_limit']
 	return df.drop(ignored_columns, axis = 1)
 
 def preprocess_data():
 	file = 'test_summary.txt' if test_data else 'all_summary.txt'
-	df = read_data(file)
+	df = read_data(file, ';')
 	df = remove_ignored_classes(df)
 	df = remove_duplicates(df)
 	df = remove_rare_classes(df)
@@ -98,10 +98,14 @@ def search(df):
 	print 'Score (' + score_measure + '): ', recall_score(y_true, y_pred, average='weighted')
 	return best_rfc
 
-def classify(df):
-	classes = df['res_name'].as_matrix()
-	df = df.drop('res_name', axis = 1)
-	print df
+def classify(df, es):
+	file = 'test_data.txt'
+	tdf = read_data(file, ',')
+	tdf = tdf[list(set(tdf.columns).intersection(df.columns))]
+	tdf = tdf.fillna(0)
+	pred = es.predict(tdf)
+	with open('result.txt', 'wb') as f:
+		f.writelines(["%s\n" % p for p in pred])
 
 if len(sys.argv) < 2:
 	sys.stderr.write('Usage: main.py [test|data] preprocess search classify print')
@@ -126,11 +130,13 @@ for param in sys.argv[1:]:
 	elif param == 'classify':
 		if 'df' not in locals():
 			df = cache_load('df')
-		classify(df)
+		if 'es' not in locals():
+			es = cache_load('es')
+		classify(df, es)
 	elif param == 'print':
 		if 'df' not in locals():
 			df = cache_load('df')
-		print df
+		print df.shape
 	else:
-		sys.stderr.write('Unrecognized option: ' + sys.argv[1])
+		sys.stderr.write('Unrecognized option: ' + param)
 		sys.exit(1)

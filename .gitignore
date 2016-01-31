@@ -3,3 +3,4 @@ cache/*
 all_summary.txt
 test_data.txt
 main.pyc
+result.txt
