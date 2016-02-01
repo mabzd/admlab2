@@ -142,14 +142,14 @@ for param in sys.argv[1:]:
 		if 'es' not in locals():
 			es = cache_load('es')
 		res = classify(df, es)
-		save_array('classify.txt', res)
+		save_array('results/classify.txt', res)
 	elif param == 'classifyg':
 		if 'df' not in locals():
 			df = cache_load('df')
 		if 'esg' not in locals():
 			esg = cache_load('esg')
 		res = classify(df, esg)
-		save_array('classifyg.txt', res)
+		save_array('results/classifyg.txt', res)
 	elif param == 'print':
 		if 'df' not in locals():
 			df = cache_load('df')
